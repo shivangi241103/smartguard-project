@@ -54,13 +54,27 @@ elif page == "Bulk Prediction":
 
     file = st.file_uploader("Upload CSV", type=["csv"])
 
-    if file is not None:
-        data = pd.read_csv(file)
+if file is not None:
+    data = pd.read_csv(file)
 
-        predictions = model.predict(data)
-        data['Prediction'] = predictions
+    # ✅ Step 1: Remove 'Class' column if present
+    if 'Class' in data.columns:
+        data = data.drop('Class', axis=1)
 
-        st.write(data.head())
+    # ✅ Step 2: Fix column order (VERY IMPORTANT)
+    expected_columns = ['Time'] + [f'V{i}' for i in range(1, 29)] + ['Amount']
+    data = data[expected_columns]
+
+    # ✅ Step 3: Make prediction
+    predictions = model.predict(data)
+
+    # ✅ Step 4: Show results
+    data['Prediction'] = predictions
+
+    st.write(data.head())
+
+    fraud_count = data['Prediction'].sum()
+    st.warning(f"🚨 Total Fraud Transactions: {fraud_count}")
 
         fraud_count = data['Prediction'].sum()
         st.warning(f"🚨 Total Fraud Transactions: {fraud_count}")
