@@ -55,23 +55,32 @@ elif page == "Bulk Prediction":
     file = st.file_uploader("Upload CSV", type=["csv"])
 
     if file is not None:
-        data = pd.read_csv(file)
+        try:
+            data = pd.read_csv(file)
 
-    # ✅ Step 1: Remove 'Class' column if present
-    if 'Class' in data.columns:
-        data = data.drop('Class', axis=1)
+            if 'Class' in data.columns:
+                data = data.drop('Class', axis=1)
 
-    # ✅ Step 2: Fix column order (VERY IMPORTANT)
-    expected_columns = ['Time'] + [f'V{i}' for i in range(1, 29)] + ['Amount']
-    data = data[expected_columns]
+            expected_columns = ['Time'] + [f'V{i}' for i in range(1, 29)] + ['Amount']
+            missing_cols = [col for col in expected_columns if col not in data.columns]
 
-    # ✅ Step 3: Make prediction
-    predictions = model.predict(data)
+            if missing_cols:
+                st.error(f"❌ Missing columns in uploaded CSV: {missing_cols}")
+            else:
+                data = data[expected_columns]
+                predictions = model.predict(data)
 
-    # ✅ Step 4: Show results
-    data['Prediction'] = predictions
+                result_data = data.copy()
+                result_data['Prediction'] = predictions
 
-    st.write(data.head())
+                st.write("### Prediction Results")
+                st.dataframe(result_data.head())
 
-    fraud_count = data['Prediction'].sum()
-    st.warning(f"🚨 Total Fraud Transactions: {fraud_count}")
+                fraud_count = result_data['Prediction'].sum()
+                st.warning(f"🚨 Total Fraud Transactions: {fraud_count}")
+                st.success(f"✅ Total Legitimate Transactions: {len(result_data) - fraud_count}")
+
+        except Exception as e:
+            st.error(f"❌ Error processing file: {e}")
+    else:
+        st.info("Please upload a CSV file.")
