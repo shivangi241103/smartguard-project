@@ -73,12 +73,31 @@ elif page == "Bulk Prediction":
                 result_data = data.copy()
                 result_data['Prediction'] = predictions
 
-                st.write("### Prediction Results")
-                st.dataframe(result_data.head())
+                st.subheader("📊 Full Data with Predictions")
+                st.dataframe(result_data)
 
+                # Summary
                 fraud_count = result_data['Prediction'].sum()
-                st.warning(f"🚨 Total Fraud Transactions: {fraud_count}")
-                st.success(f"✅ Total Legitimate Transactions: {len(result_data) - fraud_count}")
+                total = len(result_data)
+                legit_count = total - fraud_count
+
+                st.subheader("📈 Summary")
+                st.write(f"Total Transactions: {total}")
+                st.write(f"Legitimate: {legit_count}")
+                st.write(f"Fraud: {fraud_count}")
+
+                # Pie Chart
+                import matplotlib.pyplot as plt
+
+                fig, ax = plt.subplots()
+                ax.pie([legit_count, fraud_count],
+                       labels=["Legitimate", "Fraud"],
+                       autopct='%1.1f%%')
+                st.pyplot(fig)
+
+                # Download Button
+                csv = result_data.to_csv(index=False).encode('utf-8')
+                st.download_button("⬇ Download Results", csv, "results.csv", "text/csv")
 
         except Exception as e:
             st.error(f"❌ Error processing file: {e}")
