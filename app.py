@@ -55,7 +55,7 @@ elif page == "Bulk Prediction":
     file = st.file_uploader("Upload CSV", type=["csv"])
 
     if file is not None:
-    data = pd.read_csv(file)
+        data = pd.read_csv(file)
 
     # ✅ Step 1: Remove 'Class' column if present
     if 'Class' in data.columns:
