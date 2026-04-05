@@ -75,6 +75,3 @@ if file is not None:
 
     fraud_count = data['Prediction'].sum()
     st.warning(f"🚨 Total Fraud Transactions: {fraud_count}")
-
-        fraud_count = data['Prediction'].sum()
-        st.warning(f"🚨 Total Fraud Transactions: {fraud_count}")
