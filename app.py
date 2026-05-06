@@ -38,14 +38,6 @@ page = st.sidebar.radio("Navigation", ["Home", "Single Prediction", "Bulk Predic
 if page == "Home":
     st.title("💳 SmartGuard - Fraud Detection System")
 
-    st.markdown("""
-    ### 🔍 Features:
-    - Detect fraudulent transactions using Machine Learning
-    - Real-time prediction
-    - Bulk CSV processing
-    - Explainable AI (XAI)
-    - Risk level classification
-    """)
 
 # ==============================
 # SINGLE PREDICTION
