@@ -106,8 +106,8 @@ elif page == "Single Prediction":
           ax.set_title("Feature Contribution")
           st.pyplot(fig)
 
-     except Exception as e:
-          st.warning(f"⚠️ XAI not available: {e}")
+        except Exception as e:
+           st.warning(f"⚠️ XAI not available: {e}")
 
 # ==============================
 # BULK PREDICTION
