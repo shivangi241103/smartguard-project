@@ -81,16 +81,33 @@ elif page == "Single Prediction":
         # ==============================
         # 🔥 XAI - SHAP Explanation
         # ==============================
+        
         st.subheader("🧠 Explainable AI (Why this prediction?)")
 
-        feature_names = ['Time'] + [f'V{i}' for i in range(1, 29)] + ['Amount']
-        input_df = pd.DataFrame(features, columns=feature_names)
+        try:
+          feature_names = ['Time'] + [f'V{i}' for i in range(1, 29)] + ['Amount']
+          input_df = pd.DataFrame(features, columns=feature_names)
 
-        shap_values = explainer(input_df)
+          shap_values = explainer(input_df)
 
-        fig_shap = plt.figure()
-        shap.plots.waterfall(shap_values[0], show=False)
-        st.pyplot(fig_shap)
+          # ✅ Fix for classification models
+          if hasattr(shap_values, "values"):
+              values = shap_values.values
+          else:
+              values = shap_values
+
+          # If multi-class → pick fraud class (index 1)
+          if len(values.shape) == 3:
+              values = values[:, :, 1]
+
+          # Plot manually (SAFE)
+          fig, ax = plt.subplots()
+          ax.barh(feature_names, values[0])
+          ax.set_title("Feature Contribution")
+          st.pyplot(fig)
+
+     except Exception as e:
+          st.warning(f"⚠️ XAI not available: {e}")
 
 # ==============================
 # BULK PREDICTION
@@ -148,7 +165,19 @@ elif page == "Bulk Prediction":
                 # 📈 Chart
                 # ==============================
                 fig, ax = plt.subplots()
-                ax.bar(["Legit", "Fraud"], [legit_count, fraud_count])
+
+                labels = ['✅ Legit', '🚨 Fraud']
+                sizes = [legit_count, fraud_count]
+
+                ax.pie(
+                    sizes,
+                    labels=labels,
+                    autopct='%1.1f%%',
+                    startangle=90
+                )
+
+                ax.axis('equal')  # Makes it circular
+
                 st.pyplot(fig)
 
                 # ==============================
@@ -156,12 +185,41 @@ elif page == "Bulk Prediction":
                 # ==============================
                 st.subheader("🧠 Feature Importance (XAI)")
 
-                sample = result.sample(min(100, len(result)))
-                shap_values = explainer(sample[expected_columns])
+                try:
+                   sample = result.sample(min(100, len(result)))
 
-                fig_summary = plt.figure()
-                shap.summary_plot(shap_values, sample[expected_columns], show=False)
-                st.pyplot(fig_summary)
+                   shap_values = explainer(sample[expected_columns])
+
+                   # Handle SHAP output safely
+                   if hasattr(shap_values, "values"):
+                       values = shap_values.values
+                   else:
+                       values = shap_values
+
+                   # If classification → take fraud class
+                   if len(values.shape) == 3:
+                       values = values[:, :, 1]
+
+                   # Mean importance
+                   importance = np.abs(values).mean(axis=0)
+
+                   feature_names = expected_columns
+
+                   importance_df = pd.DataFrame({
+                       "Feature": feature_names,
+                       "Importance": importance
+                   }).sort_values(by="Importance", ascending=False)
+
+                   # Plot
+                   fig, ax = plt.subplots()
+                   ax.barh(importance_df["Feature"], importance_df["Importance"])
+                   ax.invert_yaxis()
+                   ax.set_title("Feature Importance")
+
+                   st.pyplot(fig)
+
+                except Exception as e:
+                    st.warning("⚠️ Unable to generate XAI plot")
 
                 # ==============================
                 # 📥 Download Results
